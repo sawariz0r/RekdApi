@@ -83,6 +83,33 @@ namespace RekdApi.Controllers
             return CreatedAtAction("GetGameSession", new { id = gameSession.Id }, gameSession);
         }
 
+        // POST: api/GameSessions/5/Move
+        [HttpPost("{id}/Move")]
+        public async Task<IActionResult> PostMove(long id)
+        {
+
+            // Mock long 
+            long mockId = 1;
+            var gameSession = await _context.GameSessions.FindAsync(mockId);
+            if (gameSession == null)
+            {
+                return NotFound();
+            }
+
+            // TODO: Handle the move
+
+            // After handling the move, save changes to db
+            await _context.SaveChangesAsync();
+
+            // TODO: Send a notification to the other player. 
+            // We dont need to wait for this to finish, so we can just fire and forget
+            var sendExpoNotification = new SendExpoNotification();
+            _ = sendExpoNotification.SendNotification("ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]");
+
+
+            return NoContent();
+        }
+
         // DELETE: api/GameSessions/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGameSession(long id)
