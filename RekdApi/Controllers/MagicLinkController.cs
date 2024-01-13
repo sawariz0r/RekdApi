@@ -7,6 +7,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RekdApi.Models;
 
+using Microsoft.AspNetCore.Authentication.BearerToken;
+using System.Security.Claims;
+using NuGet.Protocol;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Configuration;
+using System.Text;
+
+
 namespace RekdApi.Controllers
 {
   [ApiController]
@@ -15,11 +26,13 @@ namespace RekdApi.Controllers
   {
     private readonly TokenService _tokenService;
     private readonly TokenDbContext _dbContext;
+    private readonly IConfiguration _configuration;
 
-    public MagicLinkController(TokenService tokenService, TokenDbContext dbContext)
+    public MagicLinkController(TokenService tokenService, TokenDbContext dbContext, IConfiguration configuration)
     {
       _tokenService = tokenService;
       _dbContext = dbContext;
+      _configuration = configuration;
     }
 
     [HttpPost("requestMagicLink")]
@@ -47,10 +60,10 @@ namespace RekdApi.Controllers
     }
 
     [HttpGet("authenticateWithMagicLink")]
-    public IActionResult AuthenticateWithMagicLink(string email, string token)
+    public IActionResult AuthenticateWithMagicLink(string email, string givenToken)
     {
       // Log Email and Token
-      Console.WriteLine($"Email: {email}, Token: {token}");
+      Console.WriteLine($"Email: {email}, Token: {givenToken}");
 
       // Write existing tokens to the console
       var existingTokens = _dbContext.Tokens.ToList();
@@ -60,16 +73,45 @@ namespace RekdApi.Controllers
         Console.WriteLine($"Existing Token: {existingToken.Value}");
       }
 
-      var isValid = _dbContext.Tokens.Any(t => t.Email == email && t.Value == token);
+      var isValid = _dbContext.Tokens.Any(t => t.Email == email && t.Value == givenToken);
       if (isValid)
       {
-        // TODO: Authenticate the user
 
-        var tokenToDelete = _dbContext.Tokens.First(t => t.Email == email && t.Value == token);
+
+        /*var tokenToDelete = _dbContext.Tokens.First(t => t.Email == email && t.Value == token);
         _dbContext.Tokens.Remove(tokenToDelete);
-        _dbContext.SaveChanges();
+        _dbContext.SaveChanges();*/
 
-        return Ok();
+        // Create a JWT 
+        var issuer = _configuration.GetValue<string>("Jwt:Issuer");
+        var audience = _configuration.GetValue<string>("Jwt:Audience");
+        //        var key = Encoding.ASCII.GetBytes
+        var key = Encoding.ASCII.GetBytes(_configuration.GetValue<string>("Jwt:Key"));
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+          Subject = new ClaimsIdentity(new[]
+            {
+                new Claim("Id", Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, "test"),
+                new Claim(JwtRegisteredClaimNames.Email, "test@test.se"),
+                new Claim(JwtRegisteredClaimNames.Jti,
+                Guid.NewGuid().ToString())
+            }),
+          Expires = DateTime.UtcNow.AddMinutes(5),
+          Issuer = issuer,
+          Audience = audience,
+          SigningCredentials = new SigningCredentials
+            (new SymmetricSecurityKey(key),
+            SecurityAlgorithms.HmacSha512Signature)
+        };
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        var jwtToken = tokenHandler.WriteToken(token);
+        var stringToken = tokenHandler.WriteToken(token);
+
+
+
+        return Ok(stringToken);
       }
       else
       {

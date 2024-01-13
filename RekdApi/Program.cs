@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RekdApi.Models;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.BearerToken; //👈
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,8 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddAuthentication().AddBearerToken();
 
 builder.Services.AddDbContext<GameDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
