@@ -26,12 +26,15 @@ namespace RekdApi.Controllers
   {
     private readonly TokenService _tokenService;
     private readonly TokenDbContext _dbContext;
+
+    private readonly GameDbContext _gameDbContext;
     private readonly IConfiguration _configuration;
 
-    public MagicLinkController(TokenService tokenService, TokenDbContext dbContext, IConfiguration configuration)
+    public MagicLinkController(TokenService tokenService, TokenDbContext dbContext, GameDbContext gameDbContext, IConfiguration configuration)
     {
       _tokenService = tokenService;
       _dbContext = dbContext;
+      _gameDbContext = gameDbContext;
       _configuration = configuration;
     }
 
@@ -49,6 +52,20 @@ namespace RekdApi.Controllers
       });
 
       _dbContext.SaveChanges();
+
+      IEmailService emailService = new SmtpEmailService(_configuration);
+
+      var email = "oscar@prpl.se";
+      var subject = "Magic Link";
+      var body = $"Your magic link is: {token}";
+      var emailModel = new EmailModel
+      {
+        To = email,
+        Subject = subject,
+        Body = body
+      };
+
+      emailService.SendEmailAsync(emailModel);
 
       // Temporarily return the token to the user
       return Ok(token);
@@ -78,40 +95,15 @@ namespace RekdApi.Controllers
       {
 
 
-        /*var tokenToDelete = _dbContext.Tokens.First(t => t.Email == email && t.Value == token);
+        var tokenToDelete = _dbContext.Tokens.First(t => t.Email == email && t.Value == givenToken);
         _dbContext.Tokens.Remove(tokenToDelete);
-        _dbContext.SaveChanges();*/
+        _dbContext.SaveChanges();
 
-        // Create a JWT 
-        var issuer = _configuration.GetValue<string>("Jwt:Issuer");
-        var audience = _configuration.GetValue<string>("Jwt:Audience");
-        //        var key = Encoding.ASCII.GetBytes
-        var key = Encoding.ASCII.GetBytes(_configuration.GetValue<string>("Jwt:Key"));
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-          Subject = new ClaimsIdentity(new[]
-            {
-                new Claim("Id", Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Sub, "test"),
-                new Claim(JwtRegisteredClaimNames.Email, "test@test.se"),
-                new Claim(JwtRegisteredClaimNames.Jti,
-                Guid.NewGuid().ToString())
-            }),
-          Expires = DateTime.UtcNow.AddMinutes(5),
-          Issuer = issuer,
-          Audience = audience,
-          SigningCredentials = new SigningCredentials
-            (new SymmetricSecurityKey(key),
-            SecurityAlgorithms.HmacSha512Signature)
-        };
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        var jwtToken = tokenHandler.WriteToken(token);
-        var stringToken = tokenHandler.WriteToken(token);
-
-
+        JWTService jwtService = new JWTService(_configuration);
+        var stringToken = jwtService.GenerateJWT(email);
 
         return Ok(stringToken);
+
       }
       else
       {

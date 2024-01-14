@@ -20,7 +20,6 @@ services:
 
     # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
     # (Adding the "ports" property to this file will not forward from a Codespace.)
-
   db:
     image: postgres:14.3
     restart: unless-stopped
@@ -33,6 +32,11 @@ services:
       
     # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
-
+  mailhog:
+    image: mailhog/mailhog:latest
+    restart: always
+    ports:
+      - 1025:1025
+      - 8025:8025
 volumes:
   postgres-data:
