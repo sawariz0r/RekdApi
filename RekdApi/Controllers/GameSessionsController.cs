@@ -22,7 +22,6 @@ namespace RekdApi.Controllers
         }
 
         // GET: api/GameSessions
-        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GameSession>>> GetGameSessions()
         {
@@ -84,6 +83,8 @@ namespace RekdApi.Controllers
 
             return CreatedAtAction("GetGameSession", new { id = gameSession.Id }, gameSession);
         }
+
+
 
         // POST: api/GameSessions/5/Move
         [HttpPost("{id}/Move")]

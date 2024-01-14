@@ -57,7 +57,8 @@ namespace RekdApi.Controllers
 
       var email = "oscar@prpl.se";
       var subject = "Magic Link";
-      var body = $"Your magic link is: {token}";
+      var link = $"https://localhost:7027/api/MagicLink/authenticateWithMagicLink?email={email}&givenToken={token}";
+      var body = $"Your magic link is: <a href='{link}'>{link}</a>";
       var emailModel = new EmailModel
       {
         To = email,
