@@ -1,21 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using RekdApi.Models;
-
-using Microsoft.AspNetCore.Authentication.BearerToken;
-using System.Security.Claims;
-using NuGet.Protocol;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Configuration;
-using System.Text;
 using Microsoft.AspNetCore.Identity;
 
 
@@ -121,7 +105,9 @@ namespace RekdApi.Controllers
           var stringToken = jwtService.GenerateJWT(existingUser);
 
           return Ok(stringToken);
-        } else {
+        }
+        else
+        {
           return BadRequest();
         }
       }

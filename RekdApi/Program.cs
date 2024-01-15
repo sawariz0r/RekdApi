@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using RekdApi.Models;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services; //👈
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtIssuer = builder.Configuration.GetSection("Jwt:Issuer").Get<string>();
 var jwtKey = builder.Configuration.GetSection("Jwt:Key").Get<string>();
-
+var jwtConfig = new JwtConfig
+{
+    Issuer = jwtIssuer,
+    Key = jwtKey
+};
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -20,16 +20,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
  .AddJwtBearer(options =>
  {
-     options.TokenValidationParameters = new TokenValidationParameters
-     {
-         ValidateIssuer = true,
-         ValidateAudience = true,
-         ValidateLifetime = true,
-         ValidateIssuerSigningKey = true,
-         ValidIssuer = jwtIssuer,
-         ValidAudience = jwtIssuer,
-         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-     };
+     options.TokenValidationParameters = jwtConfig.GetTokenValidationParameters();
  });
 
 builder.Services.AddDbContext<GameDbContext>(options =>
@@ -39,7 +30,6 @@ builder.Services.AddDbContext<TokenDbContext>(options =>
 builder.Services.AddScoped<TokenService>();
 
 builder.Services.AddIdentityCore<User>().AddEntityFrameworkStores<GameDbContext>();
-
 
 var app = builder.Build();
 

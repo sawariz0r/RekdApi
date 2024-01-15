@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RekdApi.Models;
+using Mapster;
 
 namespace RekdApi.Controllers
 {
@@ -24,7 +20,10 @@ namespace RekdApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            // Map Users to UserDto
+
+            var users = await _context.Users.ToListAsync();
+            return Ok(TypeAdapter.Adapt<List<UserDto>>(users));
         }
 
         // GET: api/Users/5

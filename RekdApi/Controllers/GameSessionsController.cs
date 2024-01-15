@@ -1,13 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RekdApi.Models;
+
 
 namespace RekdApi.Controllers
 {
@@ -16,17 +14,25 @@ namespace RekdApi.Controllers
     public class GameSessionsController : ControllerBase
     {
         private readonly GameDbContext _context;
+        private readonly UserManager<User> _userManager;
 
-        public GameSessionsController(GameDbContext context)
+        public GameSessionsController(GameDbContext context, UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: api/GameSessions
+
+        // ...
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GameSession>>> GetGameSessions()
         {
-            return await _context.GameSessions.ToListAsync();
+            // Map GameSessions to GameSessionDto
+            var gameSessions = await _context.GameSessions.Include(gs => gs.Players).ToListAsync();
+    
+            return Ok(TypeAdapter.Adapt<List<GameSessionDto>>(gameSessions));
         }
 
         // GET: api/GameSessions/5
@@ -82,7 +88,20 @@ namespace RekdApi.Controllers
         {
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            Console.WriteLine($"User: {userId}");
+            Console.WriteLine(userId);
+            if (userId == null)
+            {
+                return BadRequest();
+            }
+            // Add user to game session
+            var foundUser = await _userManager.FindByIdAsync(userId);
+            if (foundUser == null)
+            {
+                return BadRequest();
+            }
+
+            gameSession.Players.Add(foundUser);
+
             _context.GameSessions.Add(gameSession);
             await _context.SaveChangesAsync();
 
@@ -140,5 +159,5 @@ namespace RekdApi.Controllers
             return _context.GameSessions.Any(e => e.Id == id);
         }
     }
-    
+
 }

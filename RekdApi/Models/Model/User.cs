@@ -14,7 +14,4 @@ public class User: IdentityUser
   // Expo Notification tokeny
   public List<string> ExpoPushToken { get; set; } = new List<string>();
 
-  // GameSessions
-  public List<GameSession> GameSessions { get; set; } = new List<GameSession>();
-
 }
