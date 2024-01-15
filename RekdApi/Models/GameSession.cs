@@ -6,6 +6,7 @@ namespace RekdApi.Models;
 public class GameSession
 {
   [Key]
+  [DatabaseGenerated(DatabaseGeneratedOption.None)] // Important: Disable auto-generation
   public Guid Id { get; set; } = Guid.NewGuid();
   public string JoinCode { get; set; } = new JoinCodeService().GenerateJoinCode();
   public bool IsComplete { get; set; } = false;

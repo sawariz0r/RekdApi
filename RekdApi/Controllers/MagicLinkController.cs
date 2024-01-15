@@ -105,6 +105,7 @@ namespace RekdApi.Controllers
           var result = await _userManager.CreateAsync(newUser, "YourPasswordHere1!");
           Console.WriteLine(result);
 
+          existingUser = await _userManager.FindByNameAsync(email);
           if (!result.Succeeded)
           {
             return BadRequest();
