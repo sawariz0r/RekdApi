@@ -37,7 +37,8 @@ namespace RekdApi.Controllers
       _dbContext.Tokens.Add(new Token
       {
         Email = requestDto.Email,
-        Value = token
+        Value = token,
+        Expiration = DateTime.UtcNow.AddMinutes(10)
       });
 
       _dbContext.SaveChanges();
@@ -45,9 +46,9 @@ namespace RekdApi.Controllers
       IEmailService emailService = new SmtpEmailService(_configuration);
 
       var email = requestDto.Email;
-      var subject = "Magic Link";
+      var subject = "Log in to Rekd";
       var link = $"https://localhost:7027/api/MagicLink/authenticateWithMagicLink?email={email}&givenToken={token}";
-      var body = $"Your magic link is: <a href='{link}'>{link}</a>";
+      var body = $"Your magic link is: <a href='{link}'>{link}</a> <br> This link will expire in 10 minutes.";
       var emailModel = new EmailModel
       {
         To = email,
@@ -69,52 +70,48 @@ namespace RekdApi.Controllers
     [HttpGet("authenticateWithMagicLink")]
     async public Task<IActionResult> AuthenticateWithMagicLink(string email, string givenToken)
     {
-      // Log Email and Token
-      Console.WriteLine($"Email: {email}, Token: {givenToken}");
-
-      var isValid = _dbContext.Tokens.Any(t => t.Email == email && t.Value == givenToken);
-      if (isValid)
+      var token = _dbContext.Tokens.FirstOrDefault(t => t.Email == email && t.Value == givenToken);
+      if (token == null)
       {
-        var existingUser = await _userManager.FindByNameAsync(email);
+        return Unauthorized();
+      }
 
-        if (existingUser == null)
+      if (DateTime.UtcNow > token.Expiration)
+      {
+        return Unauthorized("The token has Expired. Please request a new link.");
+      }
+
+      var existingUser = await _userManager.FindByNameAsync(email);
+
+      if (existingUser == null)
+      {
+        var newUser = new User
         {
-          var newUser = new User
-          {
-            UserName = email,
-            Email = email
-            // Add other properties as needed
-          };
-          // Create the user
-          var result = await _userManager.CreateAsync(newUser, "YourPasswordHere1!");
-          Console.WriteLine(result);
+          UserName = email,
+          Email = email
+        };
 
-          existingUser = await _userManager.FindByNameAsync(email);
-          if (!result.Succeeded)
-          {
-            return BadRequest();
-          }
-        }
-        if (existingUser != null)
-        {
-          var tokenToDelete = _dbContext.Tokens.First(t => t.Email == email && t.Value == givenToken);
-          _dbContext.Tokens.Remove(tokenToDelete);
-          _dbContext.SaveChanges();
+        var result = await _userManager.CreateAsync(newUser, "YourPasswordHere1!");
+        Console.WriteLine(result);
 
-          JWTService jwtService = new JWTService(_configuration);
-          var stringToken = jwtService.GenerateJWT(existingUser);
-
-          return Ok(stringToken);
-        }
-        else
+        existingUser = await _userManager.FindByNameAsync(email);
+        if (!result.Succeeded)
         {
           return BadRequest();
         }
       }
-      else
-      {
-        return Unauthorized();
-      }
+
+      var tokenToDelete = _dbContext.Tokens.First(t => t.Email == email && t.Value == givenToken);
+      _dbContext.Tokens.Remove(tokenToDelete);
+      _dbContext.SaveChanges();
+
+      JWTService jwtService = new JWTService(_configuration);
+      var stringToken = jwtService.GenerateJWT(existingUser);
+
+      return Ok(stringToken);
+
+
+
     }
   }
 }
