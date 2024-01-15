@@ -100,7 +100,7 @@ namespace RekdApi.Controllers
                 return BadRequest();
             }
 
-            gameSession.Players.Add(foundUser);
+            //gameSession.Players.Add(foundUser);
 
             _context.GameSessions.Add(gameSession);
             await _context.SaveChangesAsync();
@@ -113,7 +113,7 @@ namespace RekdApi.Controllers
 
         // POST: api/GameSessions/5/Move
         [HttpPost("{id}/Move")]
-        public async Task<IActionResult> PostMove(Guid id)
+        public async Task<IActionResult> PostMove([FromBody] Guid id)
         {
 
             // Mock long 

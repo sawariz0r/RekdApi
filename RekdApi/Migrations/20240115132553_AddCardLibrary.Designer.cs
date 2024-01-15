@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RekdApi.Models;
@@ -12,9 +13,11 @@ using RekdApi.Models;
 namespace RekdApi.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    partial class GameDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240115132553_AddCardLibrary")]
+    partial class AddCardLibrary
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -267,14 +270,16 @@ namespace RekdApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("HasStarted")
-                        .HasColumnType("boolean");
-
                     b.Property<bool>("IsComplete")
                         .HasColumnType("boolean");
 
                     b.Property<string>("JoinCode")
+                        .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<List<string>>("PlayerMoves")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.HasKey("Id");
 
@@ -300,33 +305,6 @@ namespace RekdApi.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Player");
-                });
-
-            modelBuilder.Entity("RekdApi.Models.PlayerMove", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CardId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("GameSessionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("PlayerId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GameSessionId");
-
-                    b.ToTable("PlayerMove");
                 });
 
             modelBuilder.Entity("RekdApi.Models.User", b =>
@@ -418,17 +396,8 @@ namespace RekdApi.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("RekdApi.Models.PlayerMove", b =>
-                {
-                    b.HasOne("RekdApi.Models.GameSession", null)
-                        .WithMany("PlayerMoves")
-                        .HasForeignKey("GameSessionId");
-                });
-
             modelBuilder.Entity("RekdApi.Models.GameSession", b =>
                 {
-                    b.Navigation("PlayerMoves");
-
                     b.Navigation("Players");
                 });
 
