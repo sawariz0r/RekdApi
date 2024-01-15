@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -30,7 +31,7 @@ namespace RekdApi.Controllers
 
         // GET: api/GameSessions/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<GameSession>> GetGameSession(long id)
+        public async Task<ActionResult<GameSession>> GetGameSession(Guid id)
         {
             var gameSession = await _context.GameSessions.FindAsync(id);
 
@@ -45,7 +46,7 @@ namespace RekdApi.Controllers
         // PUT: api/GameSessions/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutGameSession(long id, GameSession gameSession)
+        public async Task<IActionResult> PutGameSession(Guid id, GameSession gameSession)
         {
             if (id != gameSession.Id)
             {
@@ -76,10 +77,15 @@ namespace RekdApi.Controllers
         // POST: api/GameSessions
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<GameSession>> PostGameSession(GameSession gameSession)
         {
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Console.WriteLine($"User: {userId}");
             _context.GameSessions.Add(gameSession);
             await _context.SaveChangesAsync();
+
 
             return CreatedAtAction("GetGameSession", new { id = gameSession.Id }, gameSession);
         }
@@ -88,7 +94,7 @@ namespace RekdApi.Controllers
 
         // POST: api/GameSessions/5/Move
         [HttpPost("{id}/Move")]
-        public async Task<IActionResult> PostMove(long id)
+        public async Task<IActionResult> PostMove(Guid id)
         {
 
             // Mock long 
@@ -115,7 +121,7 @@ namespace RekdApi.Controllers
 
         // DELETE: api/GameSessions/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteGameSession(long id)
+        public async Task<IActionResult> DeleteGameSession(Guid id)
         {
             var gameSession = await _context.GameSessions.FindAsync(id);
             if (gameSession == null)
@@ -129,9 +135,10 @@ namespace RekdApi.Controllers
             return NoContent();
         }
 
-        private bool GameSessionExists(long id)
+        private bool GameSessionExists(Guid id)
         {
             return _context.GameSessions.Any(e => e.Id == id);
         }
     }
+    
 }

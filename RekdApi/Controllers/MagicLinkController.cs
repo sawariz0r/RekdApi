@@ -16,6 +16,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Configuration;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 
 
 namespace RekdApi.Controllers
@@ -30,12 +31,16 @@ namespace RekdApi.Controllers
     private readonly GameDbContext _gameDbContext;
     private readonly IConfiguration _configuration;
 
-    public MagicLinkController(TokenService tokenService, TokenDbContext dbContext, GameDbContext gameDbContext, IConfiguration configuration)
+    private readonly UserManager<User> _userManager;
+
+
+    public MagicLinkController(TokenService tokenService, TokenDbContext dbContext, GameDbContext gameDbContext, IConfiguration configuration, UserManager<User> userManager)
     {
       _tokenService = tokenService;
       _dbContext = dbContext;
       _gameDbContext = gameDbContext;
       _configuration = configuration;
+      _userManager = userManager;
     }
 
     [HttpPost("requestMagicLink")]
@@ -55,7 +60,7 @@ namespace RekdApi.Controllers
 
       IEmailService emailService = new SmtpEmailService(_configuration);
 
-      var email = "oscar@prpl.se";
+      var email = requestDto.Email;
       var subject = "Magic Link";
       var link = $"https://localhost:7027/api/MagicLink/authenticateWithMagicLink?email={email}&givenToken={token}";
       var body = $"Your magic link is: <a href='{link}'>{link}</a>";
@@ -78,33 +83,46 @@ namespace RekdApi.Controllers
     }
 
     [HttpGet("authenticateWithMagicLink")]
-    public IActionResult AuthenticateWithMagicLink(string email, string givenToken)
+    async public Task<IActionResult> AuthenticateWithMagicLink(string email, string givenToken)
     {
       // Log Email and Token
       Console.WriteLine($"Email: {email}, Token: {givenToken}");
 
-      // Write existing tokens to the console
-      var existingTokens = _dbContext.Tokens.ToList();
-      Console.WriteLine($"Existing Tokens: {existingTokens.Count}");
-      foreach (var existingToken in existingTokens)
-      {
-        Console.WriteLine($"Existing Token: {existingToken.Value}");
-      }
-
       var isValid = _dbContext.Tokens.Any(t => t.Email == email && t.Value == givenToken);
       if (isValid)
       {
+        var existingUser = await _userManager.FindByNameAsync(email);
 
+        if (existingUser == null)
+        {
+          var newUser = new User
+          {
+            UserName = email,
+            Email = email
+            // Add other properties as needed
+          };
+          // Create the user
+          var result = await _userManager.CreateAsync(newUser, "YourPasswordHere1!");
+          Console.WriteLine(result);
 
-        var tokenToDelete = _dbContext.Tokens.First(t => t.Email == email && t.Value == givenToken);
-        _dbContext.Tokens.Remove(tokenToDelete);
-        _dbContext.SaveChanges();
+          if (!result.Succeeded)
+          {
+            return BadRequest();
+          }
+        }
+        if (existingUser != null)
+        {
+          var tokenToDelete = _dbContext.Tokens.First(t => t.Email == email && t.Value == givenToken);
+          _dbContext.Tokens.Remove(tokenToDelete);
+          _dbContext.SaveChanges();
 
-        JWTService jwtService = new JWTService(_configuration);
-        var stringToken = jwtService.GenerateJWT(email);
+          JWTService jwtService = new JWTService(_configuration);
+          var stringToken = jwtService.GenerateJWT(existingUser);
 
-        return Ok(stringToken);
-
+          return Ok(stringToken);
+        } else {
+          return BadRequest();
+        }
       }
       else
       {

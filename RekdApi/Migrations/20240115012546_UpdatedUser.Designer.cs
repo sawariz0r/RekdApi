@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RekdApi.Models;
@@ -12,9 +13,11 @@ using RekdApi.Models;
 namespace RekdApi.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    partial class GameDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240115012546_UpdatedUser")]
+    partial class UpdatedUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,8 +28,8 @@ namespace RekdApi.Migrations
 
             modelBuilder.Entity("GameSessionUser", b =>
                 {
-                    b.Property<Guid>("GameSessionsId")
-                        .HasColumnType("uuid");
+                    b.Property<long>("GameSessionsId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("PlayersId")
                         .HasColumnType("text");
@@ -245,9 +248,11 @@ namespace RekdApi.Migrations
 
             modelBuilder.Entity("RekdApi.Models.GameSession", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -258,10 +263,6 @@ namespace RekdApi.Migrations
                     b.Property<string>("JoinCode")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<List<string>>("PlayerMoves")
-                        .IsRequired()
-                        .HasColumnType("text[]");
 
                     b.HasKey("Id");
 

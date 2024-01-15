@@ -1,19 +1,20 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace RekdApi.Models;
 
-public class User
+public class User: IdentityUser
 {
-  public long Id { get; set; }
-  [Required]
   public string DisplayName { get; set; }
   [Required]
-  public string Email { get; set; }
-  public DateTime CreatedAt { get; set; } = DateTime.Now;
+  [EmailAddress]
+  public override string Email { get; set; }
+  public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
 
-  // Expo Notification token
+  // Expo Notification tokeny
   public List<string> ExpoPushToken { get; set; } = new List<string>();
 
   // GameSessions
   public List<GameSession> GameSessions { get; set; } = new List<GameSession>();
+
 }

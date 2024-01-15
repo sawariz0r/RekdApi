@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using RekdApi.Models;
 
 public class JWTService
 {
@@ -13,9 +14,8 @@ public class JWTService
   {
     _configuration = configuration;
   }
-  public string GenerateJWT(string email)
+  public string GenerateJWT(User user)
   {
-
     // Create a JWT 
     var issuer = _configuration.GetValue<string>("Jwt:Issuer");
     var audience = _configuration.GetValue<string>("Jwt:Audience");
@@ -26,12 +26,12 @@ public class JWTService
       Subject = new ClaimsIdentity(new[]
         {
                 new Claim("Id", Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Sub, ""),
-                new Claim(JwtRegisteredClaimNames.Email, "test@test.se"),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim(JwtRegisteredClaimNames.Email, user.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti,
                 Guid.NewGuid().ToString())
             }),
-      Expires = DateTime.UtcNow.AddMinutes(5),
+      Expires = DateTime.UtcNow.AddMonths(3),
       Issuer = issuer,
       Audience = audience,
       SigningCredentials = new SigningCredentials
