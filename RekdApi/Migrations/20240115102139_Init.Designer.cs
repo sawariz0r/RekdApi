@@ -13,8 +13,8 @@ using RekdApi.Models;
 namespace RekdApi.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    [Migration("20240115012546_UpdatedUser")]
-    partial class UpdatedUser
+    [Migration("20240115102139_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -28,8 +28,8 @@ namespace RekdApi.Migrations
 
             modelBuilder.Entity("GameSessionUser", b =>
                 {
-                    b.Property<long>("GameSessionsId")
-                        .HasColumnType("bigint");
+                    b.Property<Guid>("GameSessionsId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("PlayersId")
                         .HasColumnType("text");
@@ -248,11 +248,8 @@ namespace RekdApi.Migrations
 
             modelBuilder.Entity("RekdApi.Models.GameSession", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -263,6 +260,10 @@ namespace RekdApi.Migrations
                     b.Property<string>("JoinCode")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<List<string>>("PlayerMoves")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.HasKey("Id");
 

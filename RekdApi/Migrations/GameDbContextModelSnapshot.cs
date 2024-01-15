@@ -246,7 +246,6 @@ namespace RekdApi.Migrations
             modelBuilder.Entity("RekdApi.Models.GameSession", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")

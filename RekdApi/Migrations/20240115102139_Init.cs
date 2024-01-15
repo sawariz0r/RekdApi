@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace RekdApi.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -60,11 +60,11 @@ namespace RekdApi.Migrations
                 name: "GameSessions",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     JoinCode = table.Column<string>(type: "text", nullable: false),
                     IsComplete = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    PlayerMoves = table.Column<List<string>>(type: "text[]", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -181,7 +181,7 @@ namespace RekdApi.Migrations
                 name: "GameSessionUser",
                 columns: table => new
                 {
-                    GameSessionsId = table.Column<long>(type: "bigint", nullable: false),
+                    GameSessionsId = table.Column<Guid>(type: "uuid", nullable: false),
                     PlayersId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
